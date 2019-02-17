@@ -1,0 +1,40 @@
+#!/usr/bin/env python
+
+from __future__ import absolute_import, print_function
+
+import os
+from bottle import route, run, template
+
+@route('/latest/meta-data/iam/security-credentials')
+@route('/latest/meta-data/iam/security-credentials/')
+def list_profiles():
+    return 'local-credentials'
+
+@route('/latest/meta-data/iam/security-credentials/local-credentials')
+def local_credentials():
+        # Fake expirationTime
+        from datetime import datetime, timedelta 
+        expiration_time = datetime.utcnow() + timedelta(hours=1)
+        expiration_time = expiration_time.isoformat() + "Z"
+        return {
+            'Code':           'Success',
+            'AccessKeyId':     session.access_key,
+            'SecretAccessKey': session.secret_key,
+            'Token':           session.session_token,
+            'Expiration':      expiration_time
+        }
+
+class Session(object):
+    access_key = ''
+    secret_key = ''
+    session_token = ''
+
+    def __init__(self):
+        self.access_key = os.environ['AWS_ACCESS_KEY']    
+        self.secret_key = os.environ['AWS_SECRET_KEY']    
+        self.session_token = os.environ['AWS_SESSION_TOKEN']    
+
+
+session = Session()
+run(host='169.254.169.254', port=45000)
+
